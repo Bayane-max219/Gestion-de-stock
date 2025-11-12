@@ -1,0 +1,1 @@
+'Erreur MySQL: ' . \$e- . PHP_EOL;

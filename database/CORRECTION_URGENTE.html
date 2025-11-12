@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 CORRECTION URGENTE - Dates Ventes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #ffebee; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .urgent { background: #ffcdd2; border: 2px solid #f44336; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #c8e6c9; border: 2px solid #4caf50; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .button { background: #f44336; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 16px; }
+        .button:hover { background: #d32f2f; }
+        .button.success { background: #4caf50; }
+        .button.success:hover { background: #388e3c; }
+        h1 { color: #d32f2f; text-align: center; }
+        .step { margin: 20px 0; padding: 15px; border-left: 4px solid #2196f3; background: #e3f2fd; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 CORRECTION URGENTE - Vos ventes sont datées d'octobre !</h1>
+        
+        <div class="urgent">
+            <h3>❌ PROBLÈME IDENTIFIÉ :</h3>
+            <p><strong>Vos ventes du 10/11/2025 (10 novembre) sont parsées comme 11 octobre 2025 !</strong></p>
+            <p>C'est pourquoi les rapports affichent 0 Ar - les ventes ne comptent pas pour "aujourd'hui".</p>
+        </div>
+
+        <div class="step">
+            <h3>🔍 Étape 1 : Diagnostic</h3>
+            <button class="button" onclick="diagnose()">Diagnostiquer le Problème</button>
+            <div id="diagnosis"></div>
+        </div>
+
+        <div class="step">
+            <h3>🔧 Étape 2 : Correction Automatique</h3>
+            <button class="button success" onclick="fixDates()">CORRIGER TOUTES LES DATES</button>
+            <div id="fix-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>✅ Étape 3 : Vérification</h3>
+            <button class="button success" onclick="verify()">Vérifier la Correction</button>
+            <div id="verify-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>📊 Étape 4 : Test Final</h3>
+            <button class="button success" onclick="testReports()">Tester les Rapports</button>
+            <div id="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            return userStr ? JSON.parse(userStr) : null;
+        }
+
+        function diagnose() {
+            const user = getCurrentUser();
+            if (!user) {
+                document.getElementById('diagnosis').innerHTML = '<div style="color: red;">❌ Aucun utilisateur connecté</div>';
+                return;
+            }
+
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            const userSales = allSales[user.email] || [];
+
+            let html = `<h4>📊 Diagnostic pour ${user.email}:</h4>`;
+            html += `<p><strong>Nombre de ventes:</strong> ${userSales.length}</p>`;
+
+            if (userSales.length === 0) {
+                html += '<p style="color: red;">❌ Aucune vente trouvée</p>';
+            } else {
+                html += '<h5>🔍 Analyse des dates:</h5>';
+                userSales.forEach((sale, index) => {
+                    html += `<div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 3px;">`;
+                    html += `<strong>Vente ${index + 1}:</strong> ${sale.id}<br>`;
+                    html += `<strong>Timestamp original:</strong> ${sale.timestamp}<br>`;
+                    
+                    // Tester le parsing actuel (incorrect)
+                    if (sale.timestamp.includes('à')) {
+                        const [datePart, timePart] = sale.timestamp.split(' à ');
+                        const [day, month, year] = datePart.split('/');
+                        const wrongDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        
+                        html += `<strong>❌ Parsing actuel (incorrect):</strong> ${wrongDate.toLocaleDateString('fr-FR')}<br>`;
+                        
+                        // Montrer le parsing correct
+                        const correctDate = new Date();
+                        correctDate.setFullYear(parseInt(year));
+                        correctDate.setMonth(parseInt(month) - 1);
+                        correctDate.setDate(parseInt(day));
+                        
+                        const [hour, minute, second] = timePart.split(':');
+                        correctDate.setHours(parseInt(hour) || 0, parseInt(minute) || 0, parseInt(second) || 0);
+                        
+                        html += `<strong>✅ Parsing correct (attendu):</strong> ${correctDate.toLocaleDateString('fr-FR')}<br>`;
+                        html += `<strong>💰 Montant:</strong> ${sale.total.toLocaleString()} Ar`;
+                    }
+                    html += `</div>`;
+                });
+            }
+
+            document.getElementById('diagnosis').innerHTML = html;
+        }
+
+        function fixDates() {
+            const user = getCurrentUser();
+            if (!user) {
+                document.getElementById('fix-result').innerHTML = '<div style="color: red;">❌ Aucun utilisateur connecté</div>';
+                return;
+            }
+
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            const userSales = allSales[user.email] || [];
+
+            if (userSales.length === 0) {
+                document.getElementById('fix-result').innerHTML = '<div style="color: red;">❌ Aucune vente à corriger</div>';
+                return;
+            }
+
+            let fixedCount = 0;
+            let html = '<h4>🔧 Correction en cours...</h4>';
+
+            userSales.forEach((sale, index) => {
+                if (sale.timestamp && sale.timestamp.includes('à')) {
+                    const originalTimestamp = sale.timestamp;
+                    
+                    // Parser correctement la date française
+                    const [datePart, timePart] = sale.timestamp.split(' à ');
+                    const [day, month, year] = datePart.split('/');
+                    const [hour, minute, second] = timePart.split(':');
+                    
+                    // Créer la date correcte
+                    const correctDate = new Date(
+                        parseInt(year), 
+                        parseInt(month) - 1,  // JavaScript mois 0-11
+                        parseInt(day), 
+                        parseInt(hour) || 0, 
+                        parseInt(minute) || 0, 
+                        parseInt(second) || 0
+                    );
+                    
+                    // Sauvegarder en format ISO pour éviter les futurs problèmes
+                    sale.timestamp = correctDate.toISOString();
+                    fixedCount++;
+                    
+                    html += `<div style="margin: 5px 0; padding: 5px; background: #e8f5e8;">`;
+                    html += `<strong>Vente ${index + 1}:</strong> ${sale.id}<br>`;
+                    html += `<strong>Avant:</strong> ${originalTimestamp}<br>`;
+                    html += `<strong>Après:</strong> ${correctDate.toLocaleString('fr-FR')} (${sale.timestamp})<br>`;
+                    html += `</div>`;
+                }
+            });
+
+            // Sauvegarder les corrections
+            allSales[user.email] = userSales;
+            localStorage.setItem('smarterp_sales', JSON.stringify(allSales));
+
+            html += `<div class="success"><strong>✅ ${fixedCount} date(s) corrigée(s) et sauvegardée(s) !</strong></div>`;
+            document.getElementById('fix-result').innerHTML = html;
+        }
+
+        function verify() {
+            const user = getCurrentUser();
+            if (!user) {
+                document.getElementById('verify-result').innerHTML = '<div style="color: red;">❌ Aucun utilisateur connecté</div>';
+                return;
+            }
+
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            const userSales = allSales[user.email] || [];
+
+            if (userSales.length === 0) {
+                document.getElementById('verify-result').innerHTML = '<div style="color: red;">❌ Aucune vente à vérifier</div>';
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let html = '<h4>✅ Vérification des dates corrigées:</h4>';
+            let todayCount = 0;
+
+            userSales.forEach((sale, index) => {
+                const saleDate = new Date(sale.timestamp);
+                const isToday = saleDate >= today && saleDate < new Date(today.getTime() + 24 * 60 * 60 * 1000);
+                
+                if (isToday) todayCount++;
+                
+                html += `<div style="margin: 5px 0; padding: 8px; background: ${isToday ? '#e8f5e8' : '#fff3cd'}; border-radius: 3px;">`;
+                html += `<strong>Vente ${index + 1}:</strong> ${sale.id}<br>`;
+                html += `<strong>Date:</strong> ${saleDate.toLocaleString('fr-FR')}<br>`;
+                html += `<strong>Statut:</strong> ${isToday ? '✅ Compte pour aujourd\'hui' : '⚠️ Pas aujourd\'hui'}<br>`;
+                html += `<strong>Montant:</strong> ${sale.total.toLocaleString()} Ar`;
+                html += `</div>`;
+            });
+
+            html += `<div class="success"><strong>📊 Résumé: ${todayCount} vente(s) comptent pour aujourd'hui</strong></div>`;
+            document.getElementById('verify-result').innerHTML = html;
+        }
+
+        function testReports() {
+            const user = getCurrentUser();
+            if (!user) {
+                document.getElementById('test-result').innerHTML = '<div style="color: red;">❌ Aucun utilisateur connecté</div>';
+                return;
+            }
+
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            const userSales = allSales[user.email] || [];
+
+            if (userSales.length === 0) {
+                document.getElementById('test-result').innerHTML = '<div style="color: red;">❌ Aucune vente pour calculer</div>';
+                return;
+            }
+
+            // Calculer comme ReportsPage
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            let todayRevenue = 0;
+            let todayTransactions = 0;
+            let todayCosts = 0;
+
+            userSales.forEach(sale => {
+                const saleDate = new Date(sale.timestamp);
+                
+                if (saleDate >= today) {
+                    todayRevenue += sale.total;
+                    todayTransactions += 1;
+                    
+                    if (sale.items) {
+                        sale.items.forEach(item => {
+                            const itemCost = (item.buyPrice || item.price * 0.6) * item.quantity;
+                            todayCosts += itemCost;
+                        });
+                    }
+                }
+            });
+
+            const todayProfit = todayRevenue - todayCosts;
+            const averageTicket = todayTransactions > 0 ? Math.round(todayRevenue / todayTransactions) : 0;
+
+            let html = '<div class="success">';
+            html += '<h4>📊 RÉSULTATS DES RAPPORTS (Calculés):</h4>';
+            html += `<p><strong>💰 Chiffre d'affaires aujourd'hui:</strong> ${todayRevenue.toLocaleString()} Ar</p>`;
+            html += `<p><strong>📈 Bénéfice estimé:</strong> ${todayProfit.toLocaleString()} Ar</p>`;
+            html += `<p><strong>🛍️ Transactions:</strong> ${todayTransactions}</p>`;
+            html += `<p><strong>📊 Ticket moyen:</strong> ${averageTicket.toLocaleString()} Ar</p>`;
+            html += '</div>';
+
+            html += '<div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 5px;">';
+            html += '<h4>🚀 PROCHAINES ÉTAPES:</h4>';
+            html += '<p>1. <strong>Fermez cette page</strong></p>';
+            html += '<p>2. <strong>Retournez dans SmartERP Pro</strong></p>';
+            html += '<p>3. <strong>Allez dans Rapports & Analyses</strong></p>';
+            html += '<p>4. <strong>Rechargez la page (F5)</strong></p>';
+            html += '<p>5. <strong>Vos données devraient maintenant apparaître !</strong></p>';
+            html += '</div>';
+
+            document.getElementById('test-result').innerHTML = html;
+        }
+
+        // Auto-diagnostic au chargement
+        window.onload = function() {
+            diagnose();
+        };
+    </script>
+</body>
+</html>

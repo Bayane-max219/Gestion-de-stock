@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nettoyage localStorage SmartERP</title>
+</head>
+<body>
+    <h1>🧹 Nettoyage localStorage SmartERP</h1>
+    <p>Cliquez pour nettoyer les anciennes données localStorage :</p>
+    
+    <button onclick="cleanLocalStorage()" style="padding: 10px 20px; font-size: 16px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        🗑️ Nettoyer localStorage
+    </button>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+    
+    <script>
+        function cleanLocalStorage() {
+            // Supprimer toutes les données SmartERP
+            const keysToRemove = [
+                'smarterp_current_user',
+                'smarterp_token',
+                'smarterp_products',
+                'smarterp_sales',
+                'smarterp_accounts'
+            ];
+            
+            let removed = [];
+            keysToRemove.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    removed.push(key);
+                }
+            });
+            
+            const resultDiv = document.getElementById('result');
+            if (removed.length > 0) {
+                resultDiv.innerHTML = `
+                    <h3>✅ Nettoyage terminé !</h3>
+                    <p>Clés supprimées :</p>
+                    <ul>${removed.map(key => `<li>${key}</li>`).join('')}</ul>
+                    <p><strong>Maintenant :</strong></p>
+                    <ol>
+                        <li>Fermez cette page</li>
+                        <li>Rechargez votre application SmartERP (F5)</li>
+                        <li>Connectez-vous avec votre nouveau compte</li>
+                    </ol>
+                `;
+                resultDiv.style.background = '#d4edda';
+                resultDiv.style.color = '#155724';
+            } else {
+                resultDiv.innerHTML = `
+                    <h3>ℹ️ Aucune donnée à nettoyer</h3>
+                    <p>localStorage est déjà propre.</p>
+                `;
+                resultDiv.style.background = '#d1ecf1';
+                resultDiv.style.color = '#0c5460';
+            }
+        }
+        
+        // Afficher les données actuelles
+        window.onload = function() {
+            const keys = ['smarterp_current_user', 'smarterp_token', 'smarterp_products', 'smarterp_sales', 'smarterp_accounts'];
+            const existing = keys.filter(key => localStorage.getItem(key));
+            
+            if (existing.length > 0) {
+                document.getElementById('result').innerHTML = `
+                    <h3>📋 Données localStorage actuelles :</h3>
+                    <ul>${existing.map(key => `<li>${key}</li>`).join('')}</ul>
+                    <p>Cliquez sur le bouton pour les supprimer.</p>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `
+                    <h3>✨ localStorage est propre</h3>
+                    <p>Aucune donnée SmartERP trouvée.</p>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>

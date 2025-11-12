@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Correction Dates Ventes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .section h3 { margin-top: 0; color: #333; }
+        .button { background: #007cba; color: white; padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a87; }
+        .button.danger { background: #dc3545; }
+        .button.success { background: #28a745; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .result.success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .result.error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .result.info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px; }
+        .date-comparison { display: flex; gap: 20px; margin: 10px 0; }
+        .date-box { padding: 10px; border-radius: 5px; flex: 1; }
+        .date-box.before { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .date-box.after { background: #d4edda; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Correction des Dates de Ventes</h1>
+        <p><strong>Problème :</strong> Les dates françaises "10/11/2025 à 12:03:45" sont mal parsées (10 novembre devient 11 octobre).</p>
+        
+        <div class="section">
+            <h3>1. Diagnostic</h3>
+            <button class="button" onclick="diagnoseIssue()">🔍 Diagnostiquer le Problème</button>
+            <div id="diagnosis-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>2. Correction Automatique</h3>
+            <button class="button success" onclick="fixDates()">✅ Corriger les Dates</button>
+            <div id="fix-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>3. Vérification</h3>
+            <button class="button" onclick="verifyFix()">🧪 Vérifier la Correction</button>
+            <div id="verify-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>4. Test des Rapports</h3>
+            <button class="button" onclick="testReports()">📊 Tester le Calcul des Rapports</button>
+            <div id="reports-result" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h3>5. Actions d'Urgence</h3>
+            <button class="button danger" onclick="resetSales()">🗑️ Supprimer Toutes les Ventes</button>
+            <button class="button" onclick="createTestSale()">🧪 Créer Vente de Test</button>
+            <div id="emergency-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            return userStr ? JSON.parse(userStr) : null;
+        }
+
+        function getUserSales() {
+            const user = getCurrentUser();
+            if (!user) return [];
+            
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            return allSales[user.email] || [];
+        }
+
+        function saveUserSales(sales) {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            allSales[user.email] = sales;
+            localStorage.setItem('smarterp_sales', JSON.stringify(allSales));
+        }
+
+        function diagnoseIssue() {
+            const result = document.getElementById('diagnosis-result');
+            const user = getCurrentUser();
+            
+            if (!user) {
+                result.className = 'result error';
+                result.innerHTML = '❌ Aucun utilisateur connecté';
+                return;
+            }
+
+            const sales = getUserSales();
+            
+            if (sales.length === 0) {
+                result.className = 'result info';
+                result.innerHTML = '📝 Aucune vente trouvée';
+                return;
+            }
+
+            let html = `<div class="result info">
+                <strong>📊 Diagnostic pour ${user.email}:</strong><br>
+                <strong>Nombre de ventes:</strong> ${sales.length}<br><br>
+            `;
+
+            sales.forEach((sale, index) => {
+                // Parsing actuel (incorrect)
+                const [datePart, timePart] = sale.timestamp.split(' à ');
+                const [day, month, year] = datePart.split('/');
+                const wrongDate = new Date(year, month - 1, day); // Parsing incorrect
+                const correctDate = new Date(year, parseInt(month) - 1, parseInt(day)); // Parsing correct
+
+                html += `
+                    <div class="date-comparison">
+                        <div class="date-box before">
+                            <strong>❌ Parsing Incorrect:</strong><br>
+                            "${sale.timestamp}" → ${wrongDate.toLocaleDateString('fr-FR')}
+                        </div>
+                        <div class="date-box after">
+                            <strong>✅ Parsing Correct:</strong><br>
+                            "${sale.timestamp}" → ${correctDate.toLocaleDateString('fr-FR')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            result.innerHTML = html;
+        }
+
+        function fixDates() {
+            const result = document.getElementById('fix-result');
+            const sales = getUserSales();
+            
+            if (sales.length === 0) {
+                result.className = 'result error';
+                result.innerHTML = '❌ Aucune vente à corriger';
+                return;
+            }
+
+            let fixedCount = 0;
+            
+            sales.forEach(sale => {
+                if (sale.timestamp && sale.timestamp.includes('à')) {
+                    // Convertir en format ISO pour éviter les problèmes de parsing
+                    const [datePart, timePart] = sale.timestamp.split(' à ');
+                    const [day, month, year] = datePart.split('/');
+                    const [hour, minute, second] = timePart.split(':');
+                    
+                    // Créer la date correctement
+                    const correctDate = new Date(
+                        parseInt(year), 
+                        parseInt(month) - 1, 
+                        parseInt(day), 
+                        parseInt(hour) || 0, 
+                        parseInt(minute) || 0, 
+                        parseInt(second) || 0
+                    );
+                    
+                    // Sauvegarder en format ISO
+                    sale.timestamp = correctDate.toISOString();
+                    fixedCount++;
+                }
+            });
+
+            // Sauvegarder les corrections
+            saveUserSales(sales);
+
+            result.className = 'result success';
+            result.innerHTML = `✅ ${fixedCount} date(s) corrigée(s) et sauvegardée(s)`;
+        }
+
+        function verifyFix() {
+            const result = document.getElementById('verify-result');
+            const sales = getUserSales();
+            
+            if (sales.length === 0) {
+                result.className = 'result error';
+                result.innerHTML = '❌ Aucune vente à vérifier';
+                return;
+            }
+
+            let html = '<div class="result success"><strong>✅ Vérification des dates corrigées:</strong><br><br>';
+            
+            sales.forEach((sale, index) => {
+                const saleDate = new Date(sale.timestamp);
+                const today = new Date();
+                const isToday = saleDate.toDateString() === today.toDateString();
+                
+                html += `
+                    <div style="margin: 5px 0; padding: 5px; background: ${isToday ? '#d4edda' : '#fff3cd'};">
+                        <strong>Vente ${index + 1}:</strong> ${sale.id}<br>
+                        <strong>Date:</strong> ${saleDate.toLocaleString('fr-FR')} ${isToday ? '✅ (Aujourd\'hui)' : '⚠️ (Pas aujourd\'hui)'}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            result.innerHTML = html;
+        }
+
+        function testReports() {
+            const result = document.getElementById('reports-result');
+            const sales = getUserSales();
+            
+            if (sales.length === 0) {
+                result.className = 'result error';
+                result.innerHTML = '❌ Aucune vente pour calculer les rapports';
+                return;
+            }
+
+            // Calculer comme dans ReportsPage
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let todayRevenue = 0;
+            let todayTransactions = 0;
+            let todayCosts = 0;
+
+            sales.forEach(sale => {
+                const saleDate = new Date(sale.timestamp);
+                
+                if (saleDate >= today) {
+                    todayRevenue += sale.total;
+                    todayTransactions += 1;
+                    
+                    if (sale.items) {
+                        sale.items.forEach(item => {
+                            const itemCost = (item.buyPrice || item.price * 0.6) * item.quantity;
+                            todayCosts += itemCost;
+                        });
+                    }
+                }
+            });
+
+            const todayProfit = todayRevenue - todayCosts;
+            const averageTicket = todayTransactions > 0 ? Math.round(todayRevenue / todayTransactions) : 0;
+
+            result.className = 'result success';
+            result.innerHTML = `
+                <strong>📊 Calculs des Rapports (Aujourd'hui):</strong><br>
+                <strong>💰 Chiffre d'affaires:</strong> ${todayRevenue.toLocaleString()} Ar<br>
+                <strong>📈 Bénéfice:</strong> ${todayProfit.toLocaleString()} Ar<br>
+                <strong>🛍️ Transactions:</strong> ${todayTransactions}<br>
+                <strong>📊 Ticket moyen:</strong> ${averageTicket.toLocaleString()} Ar<br>
+            `;
+        }
+
+        function resetSales() {
+            if (confirm('⚠️ ATTENTION: Cela va supprimer TOUTES vos ventes. Êtes-vous sûr ?')) {
+                const user = getCurrentUser();
+                if (user) {
+                    const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+                    delete allSales[user.email];
+                    localStorage.setItem('smarterp_sales', JSON.stringify(allSales));
+                    
+                    document.getElementById('emergency-result').innerHTML = '<div class="result success">🗑️ Toutes les ventes ont été supprimées</div>';
+                }
+            }
+        }
+
+        function createTestSale() {
+            const user = getCurrentUser();
+            if (!user) {
+                document.getElementById('emergency-result').innerHTML = '<div class="result error">❌ Aucun utilisateur connecté</div>';
+                return;
+            }
+
+            const testSale = {
+                id: 'TEST-' + Date.now(),
+                items: [{
+                    id: 1,
+                    name: 'Produit Test',
+                    price: 5000,
+                    quantity: 1,
+                    buyPrice: 3000
+                }],
+                subtotal: 5000,
+                tax: 1000,
+                total: 6000,
+                paymentMethod: 'cash',
+                amountReceived: 10000,
+                change: 4000,
+                timestamp: new Date().toISOString(),
+                cashier: user.firstName || 'Test'
+            };
+
+            const allSales = JSON.parse(localStorage.getItem('smarterp_sales') || '{}');
+            if (!allSales[user.email]) {
+                allSales[user.email] = [];
+            }
+            allSales[user.email].push(testSale);
+            localStorage.setItem('smarterp_sales', JSON.stringify(allSales));
+
+            document.getElementById('emergency-result').innerHTML = '<div class="result success">✅ Vente de test créée (6000 Ar)</div>';
+        }
+
+        // Auto-diagnostic au chargement
+        window.onload = function() {
+            diagnoseIssue();
+        };
+    </script>
+</body>
+</html>

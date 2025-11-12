@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Ventes localStorage</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .debug-section h3 { margin-top: 0; color: #333; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .button { background: #007cba; color: white; padding: 10px 15px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a87; }
+        .result { margin: 10px 0; padding: 10px; background: #e8f4f8; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Ventes localStorage - SmartERP Pro</h1>
+    
+    <div class="debug-section">
+        <h3>1. Utilisateur Connecté</h3>
+        <button class="button" onclick="checkCurrentUser()">Vérifier Utilisateur</button>
+        <div id="user-result" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>2. Ventes Sauvegardées</h3>
+        <button class="button" onclick="checkSales()">Vérifier Ventes</button>
+        <div id="sales-result" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>3. Calcul des Rapports</h3>
+        <button class="button" onclick="calculateReports()">Calculer Rapports</button>
+        <div id="reports-result" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>4. Actions de Correction</h3>
+        <button class="button" onclick="fixDateFormat()">Corriger Format Date</button>
+        <button class="button" onclick="clearAllData()" style="background: #dc3545;">Vider Données</button>
+        <div id="fix-result" class="result"></div>
+    </div>
+
+    <script>
+        function checkCurrentUser() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            const result = document.getElementById('user-result');
+            
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                result.innerHTML = `
+                    <strong>✅ Utilisateur trouvé :</strong><br>
+                    <pre>${JSON.stringify(user, null, 2)}</pre>
+                `;
+            } else {
+                result.innerHTML = '<strong>❌ Aucun utilisateur connecté</strong>';
+            }
+        }
+
+        function checkSales() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            const salesStr = localStorage.getItem('smarterp_sales');
+            const result = document.getElementById('sales-result');
+            
+            if (!userStr) {
+                result.innerHTML = '<strong>❌ Aucun utilisateur connecté</strong>';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            
+            if (salesStr) {
+                const allSales = JSON.parse(salesStr);
+                const userSales = allSales[user.email] || [];
+                
+                result.innerHTML = `
+                    <strong>📊 Ventes pour ${user.email} :</strong><br>
+                    <strong>Nombre de ventes :</strong> ${userSales.length}<br><br>
+                    <pre>${JSON.stringify(userSales, null, 2)}</pre>
+                `;
+            } else {
+                result.innerHTML = '<strong>❌ Aucune vente trouvée dans localStorage</strong>';
+            }
+        }
+
+        function calculateReports() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            const salesStr = localStorage.getItem('smarterp_sales');
+            const result = document.getElementById('reports-result');
+            
+            if (!userStr || !salesStr) {
+                result.innerHTML = '<strong>❌ Données manquantes</strong>';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            const allSales = JSON.parse(salesStr);
+            const userSales = allSales[user.email] || [];
+
+            if (userSales.length === 0) {
+                result.innerHTML = '<strong>❌ Aucune vente à calculer</strong>';
+                return;
+            }
+
+            // Calculer les statistiques
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let todayRevenue = 0;
+            let todayTransactions = 0;
+            let todayCosts = 0;
+
+            userSales.forEach(sale => {
+                console.log('Vente timestamp:', sale.timestamp);
+                
+                // Essayer différents formats de date
+                let saleDate;
+                try {
+                    // Format français : "10/11/2025 à 12:03:45"
+                    if (sale.timestamp.includes('à')) {
+                        const [datePart, timePart] = sale.timestamp.split(' à ');
+                        const [day, month, year] = datePart.split('/');
+                        saleDate = new Date(year, month - 1, day);
+                    } else {
+                        saleDate = new Date(sale.timestamp);
+                    }
+                } catch (e) {
+                    console.error('Erreur parsing date:', e);
+                    saleDate = new Date();
+                }
+
+                console.log('Date parsée:', saleDate);
+                console.log('Aujourd\'hui:', today);
+                console.log('Est aujourd\'hui?', saleDate >= today);
+
+                if (saleDate >= today) {
+                    todayRevenue += sale.total || 0;
+                    todayTransactions += 1;
+                    
+                    if (sale.items) {
+                        sale.items.forEach(item => {
+                            const itemCost = (item.buyPrice || item.price * 0.6) * item.quantity;
+                            todayCosts += itemCost;
+                        });
+                    }
+                }
+            });
+
+            const todayProfit = todayRevenue - todayCosts;
+            const averageTicket = todayTransactions > 0 ? Math.round(todayRevenue / todayTransactions) : 0;
+
+            result.innerHTML = `
+                <strong>📈 Calculs pour aujourd'hui :</strong><br>
+                <strong>Chiffre d'affaires :</strong> ${todayRevenue.toLocaleString()} Ar<br>
+                <strong>Coûts :</strong> ${todayCosts.toLocaleString()} Ar<br>
+                <strong>Bénéfice :</strong> ${todayProfit.toLocaleString()} Ar<br>
+                <strong>Transactions :</strong> ${todayTransactions}<br>
+                <strong>Ticket moyen :</strong> ${averageTicket.toLocaleString()} Ar<br>
+            `;
+        }
+
+        function fixDateFormat() {
+            const userStr = localStorage.getItem('smarterp_current_user');
+            const salesStr = localStorage.getItem('smarterp_sales');
+            const result = document.getElementById('fix-result');
+            
+            if (!userStr || !salesStr) {
+                result.innerHTML = '<strong>❌ Données manquantes</strong>';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            const allSales = JSON.parse(salesStr);
+            const userSales = allSales[user.email] || [];
+
+            if (userSales.length === 0) {
+                result.innerHTML = '<strong>❌ Aucune vente à corriger</strong>';
+                return;
+            }
+
+            // Corriger le format des dates
+            userSales.forEach(sale => {
+                if (sale.timestamp && sale.timestamp.includes('à')) {
+                    // Convertir "10/11/2025 à 12:03:45" en format ISO
+                    const [datePart, timePart] = sale.timestamp.split(' à ');
+                    const [day, month, year] = datePart.split('/');
+                    const isoDate = new Date(year, month - 1, day).toISOString();
+                    sale.timestamp = isoDate;
+                }
+            });
+
+            // Sauvegarder les corrections
+            allSales[user.email] = userSales;
+            localStorage.setItem('smarterp_sales', JSON.stringify(allSales));
+
+            result.innerHTML = `<strong>✅ Format des dates corrigé pour ${userSales.length} vente(s)</strong>`;
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ ATTENTION : Cela va supprimer toutes les données (ventes, produits, comptes). Continuer ?')) {
+                localStorage.removeItem('smarterp_sales');
+                localStorage.removeItem('smarterp_products');
+                localStorage.removeItem('smarterp_categories');
+                localStorage.removeItem('smarterp_accounts');
+                
+                document.getElementById('fix-result').innerHTML = '<strong>🗑️ Toutes les données ont été supprimées</strong>';
+            }
+        }
+
+        // Auto-check au chargement
+        window.onload = function() {
+            checkCurrentUser();
+            checkSales();
+        };
+    </script>
+</body>
+</html>
