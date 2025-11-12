@@ -78,12 +78,26 @@ php artisan serve
 
 ## 📸 Screenshots
 
-Ajoutez vos captures d'écran dans le dossier `screenshots/` :
+### 🔐 Authentification
+![Login](screenshots/login.png)
+![Register](screenshots/register.png)
 
-- `dashboard.png` - Tableau de bord principal
-- `stock-management.png` - Gestion de stock
-- `sales.png` - Interface de vente
-- `reports.png` - Page des rapports
+### 📊 Tableau de Bord
+![Dashboard](screenshots/dashboard.png)
+
+### 📦 Gestion de Stock
+![Stock Management](screenshots/stock.png)
+![Add Stock](screenshots/add_stock.png)
+
+### 🛍️ Point de Vente
+![Sales 1](screenshots/sales1.png)
+![Sales 2](screenshots/sales2.png)
+![Sales 3](screenshots/sales3.png)
+
+### 📈 Rapports
+![Reports 1](screenshots/reports1.png)
+![Reports 2](screenshots/reports2.png)
+![Reports 3](screenshots/reports3.png)
 
 ## 🎯 Fonctionnalités Détaillées
 
