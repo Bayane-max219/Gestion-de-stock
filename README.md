@@ -127,11 +127,11 @@ php artisan serve
 
 ## 📝 Licence
 
-Ce projet est développé par **Bayane-max215** pour des fins éducatives et de démonstration.
+Ce projet est développé par **Bayane-max219** pour des fins éducatives et de démonstration.
 
 ## 🤝 Contact
 
-- **GitHub**: [Bayane-max215](https://github.com/Bayane-max215)
+- **GitHub**: [Bayane-max219](https://github.com/Bayane-max219)
 - **Email**: baymi312@gmail.com
 
 ---
