@@ -78,26 +78,38 @@ php artisan serve
 
 ## 📸 Screenshots
 
-### 🔐 Authentification
-![Login](screenshots/login.png)
-![Register](screenshots/register.png)
+### 01 – Page d’inscription
+![01 – Inscription](screenshots/01-Inscrition.png)
 
-### 📊 Tableau de Bord
-![Dashboard](screenshots/dashboard.png)
+### 02 – Page de connexion
+![02 – Connexion](screenshots/02-Connexion.png)
 
-### 📦 Gestion de Stock
-![Stock Management](screenshots/stock.png)
-![Add Stock](screenshots/add_stock.png)
+### 03 – Tableau de bord (vue globale)
+![03 – Tableau de bord](screenshots/03-Tableau_de_bord.png)
 
-### 🛍️ Point de Vente
-![Sales 1](screenshots/sales1.png)
-![Sales 2](screenshots/sales2.png)
-![Sales 3](screenshots/sales3.png)
+### 04 – Ajout de stock
+![04 – Ajout de stock](screenshots/04-Ajout_de_stock.png)
 
-### 📈 Rapports
-![Reports 1](screenshots/reports1.png)
-![Reports 2](screenshots/reports2.png)
-![Reports 3](screenshots/reports3.png)
+### 05 – Vente (écran 1)
+![05 – Vente 1](screenshots/05-Vente1.png)
+
+### 06 – Scan du produit (code-barres)
+![06 – Scan produit](screenshots/06-Scan_produit.png)
+
+### 07 – Vente (écran 2 / confirmation)
+![07 – Vente 2](screenshots/07-Vente2.png)
+
+### 08 – Rapport de ventes (vue 1)
+![08 – Rapport 1](screenshots/08-Rapport1.png)
+
+### 09 – Rapport de ventes (vue 2)
+![09 – Rapport 2](screenshots/09-Rapport2.png)
+
+### 10 – Rapport détaillé (vue 3)
+![10 – Rapport 3](screenshots/10-Rapport3.png)
+
+### 11 – Vue détaillée du stock
+![11 – Stock](screenshots/11-Stock.png)
 
 ## 🎯 Fonctionnalités Détaillées
 
