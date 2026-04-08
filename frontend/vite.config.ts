@@ -11,11 +11,14 @@ export default defineConfig({
     }
   },
   server: {
+    // Dev local : proxy vers Laravel
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true
       }
     }
-  }
+  },
+  // Docker build : l'API est accessible via Nginx qui fait le reverse proxy
+  // VITE_API_URL=/api est injecté lors du build Docker
 })

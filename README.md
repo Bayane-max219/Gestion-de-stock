@@ -1,17 +1,82 @@
 # 🏪 SmartERP Pro - Système de Gestion de Stock
 
-Un système ERP complet pour la gestion de stock et ventes, développé avec **Vue.js 3** et **Laravel** (avec support localStorage pour fonctionnement hors-ligne).
+Un système ERP complet pour la gestion de stock et ventes, développé avec **Vue.js 3** et **Laravel**, **conteneurisé avec Docker** (avec support localStorage pour fonctionnement hors-ligne).
+
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Vue.js](https://img.shields.io/badge/Vue.js_3-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL_8-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
 
 ## 🎯 Fonctionnalités Principales
 
 - ✅ **Gestion de Stock Complète** - Ajout, modification, suppression de produits
-- ✅ **Point de Vente (POS)** - Interface de vente rapide et intuitive  
+- ✅ **Point de Vente (POS)** - Interface de vente rapide et intuitive
 - ✅ **Dashboard Analytics** - Graphiques et statistiques en temps réel
 - ✅ **Gestion Multi-Utilisateurs** - Comptes séparés par email
 - ✅ **Rapports Détaillés** - CA, ventes, stock par période
-- ✅ **Sauvegarde Automatique** - Données persistantes en localStorage
+- ✅ **Support Hors-Ligne** - Fonctionne sans connexion internet (localStorage)
 - ✅ **Interface Responsive** - Compatible mobile et desktop
-- ✅ **Support Hors-Ligne** - Fonctionne sans connexion internet
+- ✅ **Conteneurisation Docker** - Déploiement en une commande
+
+## 🏗️ Architecture Docker
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     Nginx :80                        │
+│              (Reverse Proxy + SPA)                   │
+└──────────┬───────────────────────┬───────────────────┘
+           │ /api/*                │ /*
+           ▼                       ▼
+┌──────────────────┐    ┌──────────────────────┐
+│  Laravel API     │    │  Vue.js 3 Frontend   │
+│  (PHP-FPM :9000) │    │  (Nginx SPA :80)     │
+└────────┬─────────┘    └──────────────────────┘
+         │
+         ▼
+┌──────────────────┐
+│  MySQL 8.0 :3306 │
+│  (stock_mgmt DB) │
+└──────────────────┘
+```
+
+## 🐳 Démarrage rapide avec Docker
+
+### Prérequis
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installé
+
+### Lancement en une commande
+
+```bash
+# Cloner le projet
+git clone https://github.com/Bayane-max219/Gestion-de-stock.git
+cd Gestion-de-stock
+
+# Démarrer tous les services
+docker compose up -d --build
+
+# L'application est disponible sur http://localhost
+```
+
+### Commandes utiles
+
+```bash
+# Voir les logs en direct
+docker compose logs -f
+
+# Arrêter les services
+docker compose down
+
+# Réinitialiser la base de données
+docker compose down -v && docker compose up -d --build
+
+# Lancer les migrations manuellement
+docker compose exec backend php artisan migrate --force
+
+# Accéder au shell du backend
+docker compose exec backend sh
+```
 
 ## 🛠️ Technologies Utilisées
 
@@ -23,62 +88,58 @@ Un système ERP complet pour la gestion de stock et ventes, développé avec **V
 - **TailwindCSS** (Styling)
 - **Chart.js** (Graphiques)
 
-### Backend (Optionnel)
-- **Laravel 10** (API REST)
-- **MySQL** (Base de données)
-- **Sanctum** (Authentification)
+### Backend
+- **Laravel 12** (API REST)
+- **MySQL 8** (Base de données)
+- **Laravel Sanctum** (Authentification)
+- **maatwebsite/excel** (Export Excel)
+- **barryvdh/laravel-dompdf** (Export PDF)
 
-## 📦 Installation Rapide
+### Infrastructure Docker
+- **Nginx** (Reverse proxy + serveur SPA)
+- **PHP 8.2-FPM** (Runtime Laravel)
+- **MySQL 8.0** (Base de données)
+- **Docker Compose** (Orchestration)
 
-### Prérequis
-- **Node.js 16+** (pour le frontend Vue.js)
-- **PHP 8.0+** (optionnel, pour Laravel)
-- **MySQL** (optionnel, pour la base de données)
+## 🔧 Installation sans Docker (développement local)
 
-### Installation Frontend (Principal)
+### Frontend
 
 ```bash
-# 1. Cloner le projet
-git clone https://github.com/Bayane-max215/BelloCode.git
-cd BelloCode
-
-# 2. Installer les dépendances
 cd frontend
 npm install
-
-# 3. Lancer le serveur de développement
 npm run dev
-
-# 4. Ouvrir dans le navigateur
-# http://localhost:5174
+# → http://localhost:5173
 ```
 
-### Comptes de Démonstration
+### Backend Laravel
+
+```bash
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
+# Configurer .env avec vos credentials MySQL
+php artisan migrate
+php artisan serve
+# → http://localhost:8000
+```
+
+## 👤 Comptes de Démonstration
 
 ```
 👤 Franco (Pharmacie)
 Email: franco@gmail.com
 Mot de passe: I love teko.
 
-👤 Fatima (Quincaillerie)  
+👤 Fatima (Quincaillerie)
 Email: fatima@gmail.com
 Mot de passe: quincaillerie
 ```
 
-### Installation Backend Laravel (Optionnel)
-
-```bash
-# Si vous voulez utiliser l'API Laravel
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan serve
-```
-
 ## 📸 Screenshots
 
-### 01 – Page d’inscription
+### 01 – Page d'inscription
 ![01 – Inscription](screenshots/01-Inscrition.png)
 
 ### 02 – Page de connexion
@@ -111,31 +172,29 @@ php artisan serve
 ### 11 – Vue détaillée du stock
 ![11 – Stock](screenshots/11-Stock.png)
 
-## 🎯 Fonctionnalités Détaillées
+## 📁 Structure du Projet
 
-### 📊 Dashboard
-- Vue d'ensemble des ventes du jour
-- Graphiques d'évolution hebdomadaire
-- Statistiques en temps réel
-- Alertes de stock faible
-
-### 📦 Gestion de Stock
-- Ajout/modification de produits
-- Catégorisation automatique
-- Gestion des codes-barres
-- Suivi des quantités
-
-### 🛍️ Point de Vente
-- Interface rapide de vente
-- Calcul automatique des totaux
-- Gestion des clients
-- Historique des transactions
-
-### 📈 Rapports
-- Chiffre d'affaires par période
-- Analyse des ventes par catégorie
-- Graphiques interactifs
-- Export des données
+```
+Gestion-de-stock/
+├── docker-compose.yml          # Orchestration des services
+├── docker/
+│   ├── nginx/
+│   │   └── default.conf        # Nginx reverse proxy
+│   ├── php/
+│   │   ├── php.ini             # Configuration PHP
+│   │   └── entrypoint.sh      # Script de démarrage Laravel
+│   └── mysql/
+│       └── init.sql            # Initialisation MySQL
+├── backend/                    # API Laravel 12
+│   ├── Dockerfile              # Image PHP 8.2-FPM multi-stage
+│   ├── app/
+│   ├── routes/
+│   └── ...
+└── frontend/                   # App Vue.js 3
+    ├── Dockerfile              # Image Node.js + Nginx multi-stage
+    ├── src/
+    └── ...
+```
 
 ## 📝 Licence
 

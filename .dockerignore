@@ -1,0 +1,10 @@
+vendor/
+node_modules/
+.git/
+.env
+*.log
+*.bat
+screenshots/
+laravel.zip
+laravel-10.x/
+database/
